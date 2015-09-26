@@ -13,6 +13,21 @@ var watchify = require('watchify');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 
+var PATHS = {
+  entry: './src/scripts/app.js',
+  buildFile: 'build.js',
+  DEV: {
+    images: 'src/images/**/*',
+    styles: 'src/styles/**/*.scss',
+    buildDest: 'dist/src/'
+  },
+  PROD: {
+    images: 'dist/images/',
+    styles: 'dist/styles/',
+    buildDest: 'dist/build/'
+  }
+};
+
 gulp.task('browser-sync', function() {
   browserSync({
     server: {
@@ -26,13 +41,13 @@ gulp.task('bs-reload', function () {
 });
 
 gulp.task('images', function(){
-  gulp.src('src/images/**/*')
+  gulp.src(PATHS.DEV.images)
     .pipe(cache(imagemin({ optimizationLevel: 3, progressive: true, interlaced: true })))
-    .pipe(gulp.dest('dist/images/'));
+    .pipe(gulp.dest(PATHS.PROD.styles));
 });
 
 gulp.task('styles', function(){
-  gulp.src(['src/styles/**/*.scss'])
+  gulp.src([PATHS.DEV.styles])
     .pipe(plumber({
       errorHandler: function (error) {
         console.log(error.message);
@@ -40,13 +55,13 @@ gulp.task('styles', function(){
     }}))
     .pipe(sass())
     .pipe(autoprefixer('last 2 versions'))
-    .pipe(gulp.dest('dist/styles/'))
+    .pipe(gulp.dest(PATHS.PROD.styles))
     .pipe(browserSync.reload({stream:true}))
 });
 
 gulp.task('scripts:development', function(){
   var watcher = watchify(browserify({
-    entries: ['./src/scripts/app.js'],
+    entries: [PATHS.entry],
     transform: [babelify],
     debug: true,
     cache: {}, packageCache: {}, fullPaths: true
@@ -54,32 +69,32 @@ gulp.task('scripts:development', function(){
 
   return watcher.on('update', function() {
     watcher.bundle()
-      .pipe(source('build.js'))
+      .pipe(source(PATHS.buildFile))
       .pipe(rename({suffix: '.min'}))      
-      .pipe(gulp.dest('dist/src'))
+      .pipe(gulp.dest(PATHS.buildDest))
       .pipe(browserSync.reload({stream:true}))
       console.log('Updated');
   })
   .bundle()
-    .pipe(source('build.js'))
-    .pipe(gulp.dest('dist/src'));
+    .pipe(source(PATHS.buildFile))
+    .pipe(gulp.dest(PATHS.buildDest));
 
 });
 
 gulp.task('scripts:production', function(){
   var b = browserify({
-    entries: ['./src/scripts/app.js'],
+    entries: [PATHS.entry],
     transform: [babelify],
-    debug: true,
+    debug: false,
     cache: {}, packageCache: {}, fullPaths: true
   });
 
   return b.bundle()
-    .pipe(source('build.js'))
+    .pipe(source(PATHS.buildFile))
     .pipe(buffer())
     .pipe(uglify())
     .pipe(rename({suffix: '.min'}))
-    .pipe(gulp.dest('dist/build'));
+    .pipe(gulp.dest(PATHS.PROD.buildDest));
 
 });
 
