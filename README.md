@@ -1,6 +1,6 @@
 # gulp-es6-starter
 
-Starter project for ES6 projects with Babel converting ES6 to ES5. Using Browserify with Watchify and BrowserSync for development.
+ES6 starter kit for personal projects. Using Browserify with Watchify and BrowserSync for development. Babelify handles the ES6 -> ES5 conversion
 
 **npm install** to install dependencies. 
 
