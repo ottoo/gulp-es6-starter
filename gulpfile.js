@@ -4,36 +4,47 @@ var autoprefixer = require('gulp-autoprefixer');
 var jshint = require('gulp-jshint');
 var uglify = require('gulp-uglify');
 var imagemin = require('gulp-imagemin');
+var inject = require('gulp-inject');
+var plumber = require('gulp-plumber');
 var cache = require('gulp-cache');
+var gutil = require('gulp-util');
 var sass = require('gulp-sass');
+var sourcemaps = require('gulp-sourcemaps');
 var browserSync = require('browser-sync');
 var babelify = require('babelify');
 var browserify = require('browserify');
 var watchify = require('watchify');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
+var del = require('del');
 
-var PATHS = {
-  entry: './src/scripts/app.js',
-  buildFile: 'build.js',
-  DEV: {
-    images: 'src/images/**/*',
-    styles: 'src/styles/**/*.scss',
-    buildDest: 'dist/src/'
-  },
-  PROD: {
-    images: 'dist/images/',
-    styles: 'dist/styles/',
-    buildDest: 'dist/build/'
-  }
-};
+// Require config
+var config = require('./config');
+
+// Environment, either dev or prod
+var ENV = gutil.env.env;
+var isDev = (ENV === 'dev');
+var isProd = (ENV === 'prod');
+
+// Get config for either for dev or prod
+var configUsed = config[ENV];
+Object.assign(configUsed, config.general);
 
 gulp.task('browser-sync', function() {
   browserSync({
-    server: {
-       baseDir: "./"
+    server: { 
+       baseDir: configUsed.baseFolder
     }
   });
+});
+
+gulp.task('clean', function() {
+  return del(['dist/**/*.js', 'dist/**/*.css', 'dist/**/*.html']);
+});
+
+gulp.task('copy-index-html', function() {
+    gulp.src(configUsed.indexPath)
+    .pipe(gulp.dest(configUsed.baseFolder));
 });
 
 gulp.task('bs-reload', function () {
@@ -41,13 +52,13 @@ gulp.task('bs-reload', function () {
 });
 
 gulp.task('images', function(){
-  gulp.src(PATHS.DEV.images)
+  gulp.src(configUsed.images)
     .pipe(cache(imagemin({ optimizationLevel: 3, progressive: true, interlaced: true })))
-    .pipe(gulp.dest(PATHS.PROD.styles));
+    .pipe(gulp.dest(configUsed.styleDest));
 });
 
-gulp.task('styles', function(){
-  gulp.src([PATHS.DEV.styles])
+gulp.task('sass', function(){
+  gulp.src([configUsed.sassSrc])
     .pipe(plumber({
       errorHandler: function (error) {
         console.log(error.message);
@@ -55,52 +66,61 @@ gulp.task('styles', function(){
     }}))
     .pipe(sass())
     .pipe(autoprefixer('last 2 versions'))
-    .pipe(gulp.dest(PATHS.PROD.styles))
+    .pipe(gulp.dest(configUsed.styleDest))
     .pipe(browserSync.reload({stream:true}))
 });
 
 gulp.task('scripts:development', function(){
-  var watcher = watchify(browserify({
-    entries: [PATHS.entry],
-    transform: [babelify],
+  var watcher = browserify({
+    entries: [configUsed.entry],
+    transform: [ 
+      [ babelify, { presets: ['es2015'] }]
+    ],
     debug: true,
-    cache: {}, packageCache: {}, fullPaths: true
-  }));
+    plugin: [watchify],
+    cache: {}, 
+    packageCache: {}, 
+    fullconfig: true
+  });
 
   return watcher.on('update', function() {
     watcher.bundle()
-      .pipe(source(PATHS.buildFile))
-      .pipe(rename({suffix: '.min'}))      
-      .pipe(gulp.dest(PATHS.buildDest))
+      .pipe(source(configUsed.buildFileName))
+      .pipe(gulp.dest(configUsed.buildDest))
       .pipe(browserSync.reload({stream:true}))
-      console.log('Updated');
   })
   .bundle()
-    .pipe(source(PATHS.buildFile))
-    .pipe(gulp.dest(PATHS.buildDest));
+    .pipe(source(configUsed.buildFileName))
+    .pipe(gulp.dest(configUsed.buildDest));
 
 });
 
 gulp.task('scripts:production', function(){
   var b = browserify({
-    entries: [PATHS.entry],
-    transform: [babelify],
+    entries: [configUsed.entry],
+    transform: [ 
+      [ babelify, { presets: ['es2015'] }]
+    ],
     debug: false,
-    cache: {}, packageCache: {}, fullPaths: true
+    cache: {}, 
+    packageCache: {}, 
+    fullconfig: true
   });
 
   return b.bundle()
-    .pipe(source(PATHS.buildFile))
+    .pipe(source(configUsed.buildFileName))
     .pipe(buffer())
+    .pipe(sourcemaps.init())
     .pipe(uglify())
-    .pipe(rename({suffix: '.min'}))
-    .pipe(gulp.dest(PATHS.PROD.buildDest));
+    //.pipe(rename({suffix: '.min'}))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest(configUsed.buildDest));
 
 });
 
-gulp.task('default', ['browser-sync', 'scripts'], function(){
-  gulp.watch("src/styles/**/*.scss", ['styles']);
-  gulp.watch("*.html", ['bs-reload']);
+gulp.task('watch', ['browser-sync', 'sass', 'scripts:development'], function(){
+  gulp.watch(configUsed.styleSrc, ['sass']);
+  gulp.watch(configUsed.indexPath, ['bs-reload']);
 });
 
-gulp.task('build', ['images', 'styles', 'scripts:production']);
+gulp.task('build', ['clean', 'images', 'sass', 'scripts:production', 'copy-index-html']);

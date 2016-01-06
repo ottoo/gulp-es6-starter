@@ -1,10 +1,10 @@
 class Test {
-	constructor(testParam) {
-		this.testParam = testParam;
+	constructor() {
+
 	}
 
-	log() {
-		console.log(this.testParam);
+	log(testParam) {
+        console.log(testParam);
 	}
 }
 
