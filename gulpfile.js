@@ -42,6 +42,14 @@ gulp.task('clean', function() {
   return del(['dist/**/*.js', 'dist/**/*.css', 'dist/**/*.html']);
 });
 
+gulp.task('index', function(){
+    return gulp.src(configUsed.indexPath)
+        .pipe(inject(
+            gulp.src(['./src/build.js', './src/styles/**/*.css'],
+                {read: false}), {relative: true}))
+        .pipe(gulp.dest(configUsed.baseFolder));
+});
+
 gulp.task('copy-index-html', function() {
     gulp.src(configUsed.indexPath)
     .pipe(gulp.dest(configUsed.baseFolder));
@@ -112,7 +120,6 @@ gulp.task('scripts:production', function(){
     .pipe(buffer())
     .pipe(sourcemaps.init())
     .pipe(uglify())
-    //.pipe(rename({suffix: '.min'}))
     .pipe(sourcemaps.write())
     .pipe(gulp.dest(configUsed.buildDest));
 
@@ -123,4 +130,4 @@ gulp.task('watch', ['browser-sync', 'sass', 'scripts:development'], function(){
   gulp.watch(configUsed.indexPath, ['bs-reload']);
 });
 
-gulp.task('build', ['clean', 'images', 'sass', 'scripts:production', 'copy-index-html']);
+gulp.task('build', ['clean', 'images', 'sass', 'scripts:production', 'copy-index-html', 'index']);
