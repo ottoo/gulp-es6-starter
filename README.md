@@ -10,11 +10,6 @@ ES6 starter kit for personal projects. Using Browserify with Watchify and Browse
 npm install
 ```
 
-### Editing paths:
-
-You can edit the input and output files and folders through the provided config.js file.
-
-
 ### To run gulp in development mode and watch for changes via browsersync, use:
 
 ```
@@ -26,4 +21,4 @@ npm run watch
 
 ```
 npm run build
-``
+```
