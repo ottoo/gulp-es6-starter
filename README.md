@@ -1,5 +1,7 @@
 # gulp-es6-starter
 
+[![Dependency Status](https://david-dm.org/ottoo/gulp-es6-starter/status.svg)](https://david-dm.org/ottoo/gulp-es6-starter#info=dependencies) [![devDependency Status](https://david-dm.org/ottoo/gulp-es6-starter/dev-status.svg)](https://david-dm.org/ottoo/gulp-es6-starter#info=devDependencies)
+
 ES6 starter kit for personal projects. Using Browserify with Watchify and BrowserSync for development. Babelify handles the ES6 -> ES5 conversion
 
 ### To install dependencies:
@@ -16,12 +18,12 @@ You can edit the input and output files and folders through the provided config.
 ### To run gulp in development mode and watch for changes via browsersync, use:
 
 ```
-gulp -env=dev watch
+npm run watch
 ```
 
 
-### To run gulp in production mode and build minified javascripts, optimize images and compile scss:
+### To run gulp in production mode and build minified javascript files, optimize images and compile scss:
 
 ```
-gulp -env=prod build
+npm run build
 ``
