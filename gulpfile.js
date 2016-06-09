@@ -1,7 +1,6 @@
 var gulp = require('gulp');
 var rename = require('gulp-rename');
 var autoprefixer = require('gulp-autoprefixer');
-var jshint = require('gulp-jshint');
 var uglify = require('gulp-uglify');
 var imagemin = require('gulp-imagemin');
 var inject = require('gulp-inject');
@@ -32,7 +31,7 @@ Object.assign(configUsed, config.general);
 
 gulp.task('browser-sync', function() {
   browserSync({
-    server: { 
+    server: {
        baseDir: configUsed.baseFolder
     }
   });
@@ -42,10 +41,10 @@ gulp.task('clean', function() {
   return del(['dist/**/*.js', 'dist/**/*.css', 'dist/**/*.html']);
 });
 
-gulp.task('index', function(){
+gulp.task('inject-scripts', function(){
     return gulp.src(configUsed.indexPath)
         .pipe(inject(
-            gulp.src(['./src/build.js', './src/styles/**/*.css'],
+            gulp.src(['./src/build.js', './src/styles/*.css'],
                 {read: false}), {relative: true}))
         .pipe(gulp.dest(configUsed.baseFolder));
 });
@@ -75,19 +74,19 @@ gulp.task('sass', function(){
     .pipe(sass())
     .pipe(autoprefixer('last 2 versions'))
     .pipe(gulp.dest(configUsed.styleDest))
-    .pipe(browserSync.reload({stream:true}))
+    //.pipe(browserSync.reload({stream:true}))
 });
 
 gulp.task('scripts:development', function(){
   var watcher = browserify({
     entries: [configUsed.entry],
-    transform: [ 
+    transform: [
       [ babelify, { presets: ['es2015'] }]
     ],
     debug: true,
     plugin: [watchify],
-    cache: {}, 
-    packageCache: {}, 
+    cache: {},
+    packageCache: {},
     fullconfig: true
   });
 
@@ -106,12 +105,12 @@ gulp.task('scripts:development', function(){
 gulp.task('scripts:production', function(){
   var b = browserify({
     entries: [configUsed.entry],
-    transform: [ 
+    transform: [
       [ babelify, { presets: ['es2015'] }]
     ],
     debug: false,
-    cache: {}, 
-    packageCache: {}, 
+    cache: {},
+    packageCache: {},
     fullconfig: true
   });
 
@@ -125,9 +124,9 @@ gulp.task('scripts:production', function(){
 
 });
 
-gulp.task('watch', ['browser-sync', 'sass', 'scripts:development'], function(){
-  gulp.watch(configUsed.styleSrc, ['sass']);
+gulp.task('watch', ['browser-sync', 'sass', 'inject-scripts', 'scripts:development'], function(){
+  gulp.watch(configUsed.sassSrc, ['sass', 'bs-reload']);
   gulp.watch(configUsed.indexPath, ['bs-reload']);
 });
 
-gulp.task('build', ['clean', 'images', 'sass', 'scripts:production', 'copy-index-html', 'index']);
+gulp.task('build', ['clean', 'images', 'sass', 'scripts:production', 'copy-index-html', 'inject-scripts']);

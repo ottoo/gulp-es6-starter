@@ -3,12 +3,12 @@ module.exports = {
     "indexPath": "./src/index.html",
     "entry": "./src/scripts/app.js",
     "buildFileName": "build.js",
-    "sassSrc": "./src/styles/**/*.scss"
-  },  
+    "sassSrc": "./src/styles/scss/**/*.scss"
+  },
   "dev": {
     "baseFolder": "./src",
     "images": "./src/images/**/*",
-    "styleDest": "./src/styles/css",
+    "styleDest": "./src/styles",
     "buildDest": "./src"
   },
   "prod": {
